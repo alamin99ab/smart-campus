@@ -1,26 +1,26 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { toast } from "sonner";
 
-// Get API base URL from environment or use default (for local development)
+const DEFAULT_PRODUCTION_API_URL = "https://smart-campas-backend.onrender.com/api";
+
+// Get API base URL from environment or use safe defaults
 const getApiBaseUrl = () => {
-  // Vite environment variable
   const envUrl = String(import.meta.env.VITE_API_URL || "").trim().replace(/\/+$/, "");
+
   if (envUrl) {
-    // Prevent accidental production build with localhost API target.
     if (import.meta.env.PROD && /(localhost|127\.0\.0\.1)/i.test(envUrl)) {
-      return `${window.location.origin}/api`;
+      console.error("Invalid production VITE_API_URL detected. Falling back to the deployed Render API.");
+      return DEFAULT_PRODUCTION_API_URL;
     }
+
     return envUrl;
   }
-  
-  // Check if running in production vs development
+
   if (import.meta.env.PROD) {
-    // Use same-origin API by default in production so we don't accidentally point at the wrong backend.
-    const { origin } = window.location;
-    return `${origin}/api`;
+    console.warn("VITE_API_URL is not set for production. Falling back to the deployed Render API.");
+    return DEFAULT_PRODUCTION_API_URL;
   }
-  
-  // Default to local backend
+
   return "http://localhost:3001/api";
 };
 
