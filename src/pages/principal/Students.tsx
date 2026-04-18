@@ -212,23 +212,35 @@ export default function StudentsPage() {
   const [showProfile, setShowProfile] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [exportingPdf, setExportingPdf] = useState<PdfExportType | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const qc = useQueryClient();
 
   const {
-    data: students = [],
+    data: studentsResponse,
     isLoading,
     isError: studentsError,
     error: studentsQueryError,
     isFetching: studentsFetching,
     refetch: refetchStudents,
-  } = useQuery<StudentListRow[]>({
-    queryKey: ["students"],
+  } = useQuery({
+    queryKey: ["students", currentPage, pageSize],
     queryFn: async () => {
-      const res = await api.get("/principal/students");
-      return extractApiArray<StudentListRow>(res.data, ["students"]);
+      const res = await api.get("/principal/students", { 
+        params: { page: currentPage, limit: pageSize } 
+      });
+      return res.data;
     },
   });
+
+  const students = studentsResponse?.data || [];
+  const pagination = studentsResponse?.pagination || {
+    page: currentPage,
+    limit: pageSize,
+    total: 0,
+    totalPages: 0
+  };
 
   const {
     data: classes = [],
@@ -489,6 +501,50 @@ export default function StudentsPage() {
               </TableBody>
             </Table>
           </div>
+          
+          {/* Pagination Controls */}
+          {pagination.totalPages > 1 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t bg-muted/20">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Showing {((pagination.page - 1) * pagination.limit) + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} students</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Select value={pageSize.toString()} onValueChange={(value) => {
+                  setPageSize(Number(value));
+                  setCurrentPage(1);
+                }}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={pagination.page <= 1}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm font-medium px-2">
+                  Page {pagination.page} of {pagination.totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                  disabled={pagination.page >= pagination.totalPages}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
       

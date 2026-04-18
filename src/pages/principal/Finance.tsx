@@ -119,6 +119,7 @@ export default function FinancePage() {
   const createMutation = useMutation({
     mutationFn: async () => {
       if (!form.dueDate) throw new Error("Due date is required");
+      if (!form.studentId) throw new Error("Student is required");
       const d = new Date(form.dueDate);
       const month = d.getMonth() + 1;
       const year = d.getFullYear();
@@ -126,8 +127,9 @@ export default function FinancePage() {
         studentId: form.studentId,
         month,
         year,
-        amountPaid: 0,
         amountDue: parseFloat(form.amount),
+        feeType: "Monthly",
+        dueDate: d.toISOString(),
       });
       return res.data;
     },
@@ -173,6 +175,18 @@ export default function FinancePage() {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.studentId) {
+      toast.error("Student is required");
+      return;
+    }
+    if (!form.amount || Number(form.amount) < 0) {
+      toast.error("Valid amount is required");
+      return;
+    }
+    if (!form.dueDate) {
+      toast.error("Billing month is required");
+      return;
+    }
     createMutation.mutate();
   };
 

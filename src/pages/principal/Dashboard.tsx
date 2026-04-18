@@ -3,14 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { getErrorMessage } from "@/lib/apiResponse";
 import { formatCurrency } from "@/lib/formatters";
+import { exportStudents, exportTeachers, exportAttendance, exportResults, exportFees, exportNotices, exportFullSchoolSummary } from "@/lib/exportUtils";
 import { StatCard } from "@/components/StatCard";
 import { PageHeader } from "@/components/PageHeader";
 import { SkeletonDashboard } from "@/components/SkeletonLoader";
 import { EmptyState } from "@/components/EmptyState";
-import { Users, GraduationCap, BookOpen, Layers, Calendar, Bell, DollarSign, ClipboardList, AlertCircle, TrendingUp } from "lucide-react";
+import { Users, GraduationCap, BookOpen, Layers, Calendar, Bell, DollarSign, ClipboardList, AlertCircle, TrendingUp, Download } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartLegend } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar, Cell } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 interface PrincipalDashboardData {
   months?: string[];
@@ -95,6 +97,51 @@ export default function PrincipalDashboard() {
         <StatCard title="Notices" value={stats.totalNotices ?? 0} icon={Bell} />
         <StatCard title="Fee Collected" value={formatCurrency(stats.feeCollected)} icon={DollarSign} />
       </div>
+
+      {/* Export Section */}
+      <Card className="border-0 shadow-md">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <Download className="w-5 h-5 text-blue-600" />
+              Quick Exports
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">Download school data in Excel or PDF format</p>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Button variant="outline" size="sm" onClick={() => exportStudents({ format: 'xlsx' })}>
+              <Download className="h-4 w-4 mr-1" />
+              Students
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportTeachers({ format: 'xlsx' })}>
+              <Download className="h-4 w-4 mr-1" />
+              Teachers
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportAttendance({ format: 'xlsx' })}>
+              <Download className="h-4 w-4 mr-1" />
+              Attendance
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportResults({ format: 'xlsx' })}>
+              <Download className="h-4 w-4 mr-1" />
+              Results
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportFees({ format: 'xlsx' })}>
+              <Download className="h-4 w-4 mr-1" />
+              Fees
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportNotices({ format: 'xlsx' })}>
+              <Download className="h-4 w-4 mr-1" />
+              Notices
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportFullSchoolSummary({ format: 'xlsx' })} className="md:col-span-2">
+              <Download className="h-4 w-4 mr-1" />
+              Full Summary
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-0 shadow-md">

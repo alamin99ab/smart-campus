@@ -3,11 +3,21 @@ import api, { type ApiResponse } from "@/lib/api";
 
 export type UserRole = "super_admin" | "principal" | "teacher" | "student" | "parent" | "accountant";
 
+const normalizeRole = (role: unknown): UserRole => {
+  const value = String(role || "").trim().toLowerCase();
+  if (value === "admin") return "principal";
+  if (value === "super_admin" || value === "principal" || value === "teacher" || value === "student" || value === "parent" || value === "accountant") {
+    return value;
+  }
+  return "student";
+};
+
 export interface User {
   _id: string;
   name: string;
   email: string;
   role: UserRole;
+  schoolId?: string;
   schoolCode?: string;
   schoolName?: string;
   phone?: string;
@@ -115,7 +125,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         _id: String(userData._id || ''),
         name: String(userData.name || ''),
         email: String(userData.email || ''),
-        role: String(userData.role || 'student') as UserRole,
+        role: normalizeRole(userData.role),
+        schoolId: (userData.schoolId as string | undefined) || ((userData.schoolDetails as { schoolId?: string } | undefined)?.schoolId),
         schoolCode: userData.schoolCode as string | undefined,
         schoolName: userData.schoolName as string | undefined,
         isApproved: userData.isApproved as boolean | undefined,
@@ -135,7 +146,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       // Store in localStorage
       localStorage.setItem("sc_token", token);
-      localStorage.setItem("sc_refresh_token", refreshToken);
+      if (refreshToken) {
+        localStorage.setItem("sc_refresh_token", refreshToken);
+      } else {
+        localStorage.removeItem("sc_refresh_token");
+      }
       localStorage.setItem("sc_user", JSON.stringify(user));
 
       set({ user, token, isAuthenticated: true, isLoading: false });
@@ -173,9 +188,10 @@ export const useAuthStore = create<AuthState>((set) => ({
           _id: String(userData._id || userData.id || ''),
           name: String(userData.name || ''),
           email: String(userData.email || ''),
-          role: String(userData.role || 'student') as UserRole,
+          role: normalizeRole(userData.role),
+          schoolId: (userData.schoolId as string | undefined) || ((userData.school as { _id?: string } | undefined)?._id),
           schoolCode: userData.schoolCode as string | undefined,
-          schoolName: userData.schoolName as string | undefined,
+          schoolName: (userData.schoolName as string | undefined) || ((userData.school as { schoolName?: string } | undefined)?.schoolName),
           phone: userData.phone as string | undefined,
           isApproved: userData.isApproved as boolean | undefined,
           isEnvBased: userData.isEnvBased === true,

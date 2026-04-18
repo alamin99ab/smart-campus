@@ -56,6 +56,11 @@ Create a `.env` file in the root directory:
 VITE_API_URL=https://your-backend-url/api
 ```
 
+Notes:
+- Use `http://localhost:3001/api` for local development.
+- For production (Vercel), set `VITE_API_URL` to your deployed Render backend URL.
+- Do not use localhost URLs in production environment variables.
+
 ## Project Structure
 
 ```

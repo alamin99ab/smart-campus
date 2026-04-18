@@ -28,6 +28,7 @@ const ParentsPage = lazy(() => import("@/pages/principal/Parents"));
 const PrincipalAttendance = lazy(() => import("@/pages/principal/Attendance"));
 const RoutinePage = lazy(() => import("@/pages/principal/Routine"));
 const ExamsPage = lazy(() => import("@/pages/principal/Exams"));
+const PrincipalAcademicSessions = lazy(() => import("@/pages/principal/AcademicSessions"));
 const ResultsPage = lazy(() => import("@/pages/principal/Results"));
 const NoticesPage = lazy(() => import("@/pages/principal/Notices"));
 const FinancePage = lazy(() => import("@/pages/principal/Finance"));
@@ -39,6 +40,8 @@ const TeacherClasses = lazy(() => import("@/pages/teacher/Classes"));
 const TeacherAttendance = lazy(() => import("@/pages/teacher/Attendance"));
 const TeacherAssignments = lazy(() => import("@/pages/teacher/Assignments"));
 const TeacherMarks = lazy(() => import("@/pages/teacher/Marks"));
+const TeacherClassTests = lazy(() => import("@/pages/teacher/ClassTests"));
+const TeacherRoutine = lazy(() => import("@/pages/teacher/Routine"));
 const TeacherSubstituteCoverage = lazy(() => import("@/pages/teacher/SubstituteCoverage"));
 
 const StudentDashboard = lazy(() => import("@/pages/student/Dashboard"));
@@ -60,6 +63,7 @@ const AccountantFees = lazy(() => import("@/pages/accountant/Fees"));
 const AccountantInvoices = lazy(() => import("@/pages/accountant/Invoices"));
 const AccountantPayments = lazy(() => import("@/pages/accountant/Payments"));
 const AccountantReports = lazy(() => import("@/pages/accountant/Reports"));
+const AccountantExports = lazy(() => import("@/pages/accountant/Exports"));
 
 const SettingsPage = lazy(() => import("@/pages/shared/Settings"));
 const ProfilePage = lazy(() => import("@/pages/shared/Profile"));
@@ -132,6 +136,7 @@ const App = () => (
                 <Route path="/principal/attendance" element={<PrincipalAttendance />} />
                 <Route path="/principal/routine" element={<RoutinePage />} />
                 <Route path="/principal/exams" element={<ExamsPage />} />
+                <Route path="/principal/academic-sessions" element={<PrincipalAcademicSessions />} />
                 <Route path="/principal/results" element={<ResultsPage />} />
                 <Route path="/principal/notices" element={<NoticesPage />} />
                 <Route path="/principal/finance" element={<FinancePage />} />
@@ -149,6 +154,8 @@ const App = () => (
                 <Route path="/teacher/substitute-coverage" element={<TeacherSubstituteCoverage />} />
                 <Route path="/teacher/assignments" element={<TeacherAssignments />} />
                 <Route path="/teacher/marks" element={<TeacherMarks />} />
+                <Route path="/teacher/class-tests" element={<TeacherClassTests />} />
+                <Route path="/teacher/routine" element={<TeacherRoutine />} />
                 <Route path="/teacher/profile" element={<ProfilePage />} />
                 <Route path="/teacher/change-password" element={<ChangePasswordPage />} />
               </Route>
@@ -180,6 +187,7 @@ const App = () => (
                 <Route path="/accountant/invoices" element={<AccountantInvoices />} />
                 <Route path="/accountant/payments" element={<AccountantPayments />} />
                 <Route path="/accountant/reports" element={<AccountantReports />} />
+                <Route path="/accountant/exports" element={<AccountantExports />} />
                 <Route path="/accountant/change-password" element={<ChangePasswordPage />} />
               </Route>
 

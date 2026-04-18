@@ -1,24 +1,22 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { toast } from "sonner";
 
-const DEFAULT_PRODUCTION_API_URL = "https://smart-campas-backend.onrender.com/api";
-
-// Get API base URL from environment or use safe defaults
+// Resolve API base URL from env with deployment-safe defaults.
 const getApiBaseUrl = () => {
   const envUrl = String(import.meta.env.VITE_API_URL || "").trim().replace(/\/+$/, "");
 
   if (envUrl) {
     if (import.meta.env.PROD && /(localhost|127\.0\.0\.1)/i.test(envUrl)) {
-      console.error("Invalid production VITE_API_URL detected. Falling back to the deployed Render API.");
-      return DEFAULT_PRODUCTION_API_URL;
+      console.error("Invalid production VITE_API_URL detected (localhost). Falling back to relative /api.");
+      return "/api";
     }
 
     return envUrl;
   }
 
   if (import.meta.env.PROD) {
-    console.warn("VITE_API_URL is not set for production. Falling back to the deployed Render API.");
-    return DEFAULT_PRODUCTION_API_URL;
+    console.error("VITE_API_URL is not set for production. Falling back to relative /api.");
+    return "/api";
   }
 
   return "http://localhost:3001/api";
@@ -56,7 +54,10 @@ const getRequestPath = (url?: string) => {
       return new URL(url).pathname;
     }
 
-    return new URL(url, API_BASE_URL).pathname;
+    const base = API_BASE_URL.startsWith("http")
+      ? API_BASE_URL
+      : `${window.location.origin}${API_BASE_URL}`;
+    return new URL(url, base).pathname;
   } catch {
     return url;
   }
@@ -110,21 +111,31 @@ api.interceptors.response.use(
             // Backend returns: { token, refreshToken } or { success: true, data: { token } }
             const responseData = res.data as Record<string, unknown>;
             let newToken: string | null = null;
+            let newRefreshToken: string | null = null;
 
             // Handle both response formats
             if ('token' in responseData && responseData.token) {
               // Flat format: { token, refreshToken }
               newToken = String(responseData.token);
+              if ('refreshToken' in responseData && responseData.refreshToken) {
+                newRefreshToken = String(responseData.refreshToken);
+              }
             } else if (responseData.success && responseData.data && typeof responseData.data === 'object') {
               // Wrapped format: { success: true, data: { token } }
               const data = responseData.data as Record<string, unknown>;
               if ('token' in data) {
                 newToken = String(data.token);
               }
+              if ('refreshToken' in data && data.refreshToken) {
+                newRefreshToken = String(data.refreshToken);
+              }
             }
 
             if (newToken) {
               localStorage.setItem("sc_token", newToken);
+              if (newRefreshToken) {
+                localStorage.setItem("sc_refresh_token", newRefreshToken);
+              }
               error.config.headers.Authorization = `Bearer ${newToken}`;
               return api(error.config);
             }

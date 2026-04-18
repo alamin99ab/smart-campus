@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { extractApiArray, getErrorMessage } from "@/lib/apiResponse";
+import { formatCurrency } from "@/lib/formatters";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -9,24 +10,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { FileText, Download } from "lucide-react";
 import { toast } from "sonner";
 
-interface FeeReportRow {
+interface OutstandingInvoiceRow {
   _id: string;
-  studentId?: { name?: string; roll?: string; rollNumber?: string };
-  month?: number;
-  year?: number;
-  amountDue?: number;
-  amountPaid?: number;
-  status?: string;
+  studentName?: string;
+  studentId?: string;
+  roll?: string;
+  class?: string;
+  section?: string;
+  totalDue?: number;
+  overdueAmount?: number;
 }
 
 export default function AccountantInvoicesPage() {
   const qc = useQueryClient();
 
-  const { data: fees = [], isLoading, isError, error, refetch, isFetching } = useQuery<FeeReportRow[]>({
-    queryKey: ["accountant-fee-report"],
+  const { data: invoices = [], isLoading, isError, error, refetch, isFetching } = useQuery<OutstandingInvoiceRow[]>({
+    queryKey: ["accountant-outstanding-invoices"],
     queryFn: async () => {
-      const res = await api.get("/fees/report", { params: { limit: 200 } });
-      return extractApiArray<FeeReportRow>(res.data, ["fees"]);
+      const res = await api.get("/accountant/outstanding-fees");
+      return extractApiArray<OutstandingInvoiceRow>(res.data, ["outstandingFees"]);
     },
   });
 
@@ -37,7 +39,7 @@ export default function AccountantInvoicesPage() {
     },
     onSuccess: (d) => {
       toast.success(d.message || "Invoices generated");
-      qc.invalidateQueries({ queryKey: ["accountant-fee-report"] });
+      qc.invalidateQueries({ queryKey: ["accountant-outstanding-invoices"] });
     },
     onError: (e: unknown) => toast.error(getErrorMessage(e, "Failed to generate invoices")),
   });
@@ -46,7 +48,7 @@ export default function AccountantInvoicesPage() {
   if (isError) {
     return (
       <div className="animate-fade-in">
-        <PageHeader title="Invoices" description="Student fee records (from fee report)" />
+        <PageHeader title="Invoices" description="Outstanding student invoices" />
         <EmptyState
           title="Failed to load invoices"
           description={getErrorMessage(error, "Please try again.")}
@@ -62,14 +64,14 @@ export default function AccountantInvoicesPage() {
     <div className="animate-fade-in">
       <PageHeader
         title="Invoices"
-        description="Student fee records (from fee report)"
+        description="Outstanding student invoices"
         actionLabel="Generate Invoices"
         onAction={() => generateInvoices.mutate()}
       />
-      {fees.length === 0 ? (
+      {invoices.length === 0 ? (
         <EmptyState
-          title="No fee records"
-          description="Fee lines appear once fee records exist"
+          title="No outstanding invoices"
+          description="Outstanding lines appear when students have unpaid amounts"
           icon={FileText}
           actionLabel="Generate Invoices"
           onAction={() => generateInvoices.mutate()}
@@ -80,34 +82,24 @@ export default function AccountantInvoicesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Student</TableHead>
-                <TableHead>Period</TableHead>
-                <TableHead>Due</TableHead>
-                <TableHead>Paid</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Class</TableHead>
+                <TableHead>Total Due</TableHead>
+                <TableHead>Overdue</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {fees.map((inv) => (
+              {invoices.map((inv) => (
                 <TableRow key={inv._id}>
                   <TableCell className="font-medium">
-                    {inv.studentId?.name || "-"}
-                    {inv.studentId?.roll || inv.studentId?.rollNumber ? (
-                      <span className="text-muted-foreground text-sm block">{inv.studentId?.roll || inv.studentId?.rollNumber}</span>
+                    {inv.studentName || "-"}
+                    {inv.roll ? (
+                      <span className="text-muted-foreground text-sm block">{inv.roll}</span>
                     ) : null}
                   </TableCell>
-                  <TableCell>{inv.month}/{inv.year}</TableCell>
-                  <TableCell>₹{(inv.amountDue ?? 0).toFixed(2)}</TableCell>
-                  <TableCell>₹{(inv.amountPaid ?? 0).toFixed(2)}</TableCell>
-                  <TableCell>
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        inv.status === "Paid" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {inv.status || "-"}
-                    </span>
-                  </TableCell>
+                  <TableCell>{[inv.class, inv.section].filter(Boolean).join("-") || "-"}</TableCell>
+                  <TableCell>{formatCurrency(inv.totalDue)}</TableCell>
+                  <TableCell>{formatCurrency(inv.overdueAmount)}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm" type="button" disabled title="Export not wired">
                       <Download className="h-4 w-4" />
